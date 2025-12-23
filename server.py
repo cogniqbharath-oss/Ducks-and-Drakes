@@ -37,22 +37,41 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
                 user_message = data.get('message', '')
                 
+                print(f"Received message: {user_message}")  # Debug log
+                
                 if chat:
                     response_data = chat.handler(user_message)
+                    print(f"Response: {response_data}")  # Debug log
                 else:
                     response_data = {"error": "Chat module not loaded"}
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')  # CORS
                 self.end_headers()
                 self.wfile.write(json.dumps(response_data).encode('utf-8'))
                 
             except Exception as e:
+                print(f"Error in POST handler: {e}")  # Debug log
+                import traceback
+                traceback.print_exc()
+                
                 self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')  # CORS
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
         else:
             self.send_error(404, "File not found")
+    
+    def do_OPTIONS(self):
+        # Handle CORS preflight
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
 
 with socketserver.TCPServer(("", PORT), CustomHandler) as httpd:
     print(f"Serving at http://localhost:{PORT}")
