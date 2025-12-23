@@ -27,46 +27,72 @@ export default {
         );
       }
 
-      // Create prompt with business context
-      const prompt = `You are the AI assistant for Ducks and Drakes sports bar in Leavenworth, WA.
+      // Enhanced system prompt
+      const prompt = `You are the friendly AI bartender assistant for Ducks and Drakes, a beloved sports bar in Leavenworth, WA.
 
-Location: 221 8th St, Leavenworth, WA 98826
-Hours: Daily until 1:00 AM
-Features: Pool tables, karaoke, great food & drinks
+BUSINESS INFO:
+- Location: 221 8th St, Leavenworth, WA 98826
+- Phone: (509) 548-0270
+- Hours: Daily 11:00 AM - 1:00 AM
+- Vibe: Casual sports bar with pool tables, karaoke nights, great food & drinks
+- Specialties: Burgers, fries, American classics, draft beer, full bar
 
-Be friendly and concise. If asked about bookings, request name and phone.
+YOUR PERSONALITY:
+- Friendly, welcoming, and enthusiastic
+- Use casual language (like a real bartender)
+- Be concise but helpful
+- Show excitement about the food and atmosphere
 
-User: ${userMessage}
-Assistant:`;
+IMPORTANT RULES:
+- Keep responses SHORT (2-3 sentences max)
+- If asked about bookings/reservations, ask for their name and phone number
+- For food images, say "I can show you some pictures!" (frontend handles this)
+- Never make up information - stick to what you know
+- Be conversational and natural
 
-      // Use gemini-2.0-flash-exp (the working model)
-      const geminiResponse = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=" +
-        env.GEMINI_API_KEY,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: prompt }],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 200,
-            },
-          }),
+USER QUESTION: ${userMessage}
+
+YOUR RESPONSE (keep it brief and friendly):`;
+
+      // Retry logic parameters
+      const maxRetries = 3;
+      let reply = "Sorry, I'm having trouble connecting right now. Please try again!";
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          // Use gemini-2.5-flash
+          const geminiResponse = await fetch(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
+            env.GEMINI_API_KEY,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                  temperature: 0.7,
+                  maxOutputTokens: 200,
+                },
+              }),
+            }
+          );
+
+          if (geminiResponse.status === 429) {
+            // Rate limit - wait and retry
+            const waitTime = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          }
+
+          const data = await geminiResponse.json();
+          if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+            reply = data.candidates[0].content.parts[0].text;
+            break; // Success
+          }
+        } catch (e) {
+          console.error(`Attempt ${attempt + 1} failed:`, e);
         }
-      );
-
-      const data = await geminiResponse.json();
-
-      const reply =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "I'm here to help! Ask me about our hours, menu, or events!";
+      }
 
       return new Response(
         JSON.stringify({ reply }),

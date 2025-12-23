@@ -26,9 +26,10 @@ try:
     if response.status_code == 200:
         data = response.json()
         print(f"\n✅ API Key works!")
-        print(f"Available models:")
-        for model in data.get("models", [])[:5]:
-            print(f"  - {model.get('name')}")
+        with open('models.txt', 'w') as f:
+            for model in data.get("models", []):
+                print(f"  - {model.get('name')}")
+                f.write(f"{model.get('name')}\n")
     else:
         print(f"Error: {response.text}")
 except Exception as e:

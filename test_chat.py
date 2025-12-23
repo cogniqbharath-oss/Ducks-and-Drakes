@@ -15,6 +15,7 @@ def load_env():
                     os.environ[key] = value
 
 load_env()
+print(f"Loaded Key: {os.environ.get('GEMINI_API_KEY')}")
 
 # Test the chat module
 try:
