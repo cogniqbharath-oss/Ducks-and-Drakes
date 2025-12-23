@@ -52,12 +52,8 @@ def handler(user_message):
     try:
         genai.configure(api_key=api_key)
         
-        # Try gemini-pro first, fallback to other models if needed
-        try:
-            model = genai.GenerativeModel("gemini-pro")
-        except:
-            # Fallback to flash model
-            model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        # Use the correct model name - gemini-1.5-flash-latest is supported
+        model = genai.GenerativeModel("gemini-1.5-flash-latest")
         
         # System prompt
         system_prompt = """You are the friendly AI assistant for Ducks and Drakes, a sports bar in Leavenworth, WA.
