@@ -39,9 +39,9 @@ Be friendly and concise. If asked about bookings, request name and phone.
 User: ${userMessage}
 Assistant:`;
 
-      // Use gemini-1.5-flash (the working model)
+      // Use gemini-2.0-flash-exp (the working model)
       const geminiResponse = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=" +
         env.GEMINI_API_KEY,
         {
           method: "POST",
