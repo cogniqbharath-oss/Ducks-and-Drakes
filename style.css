@@ -64,9 +64,18 @@ nav.scrolled {
 }
 
 .logo {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary);
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 50px;
+    width: auto;
+    transition: height 0.3s;
+}
+
+nav.scrolled .logo img {
+    height: 40px;
 }
 
 .nav-links {
@@ -95,7 +104,7 @@ nav.scrolled {
 /* Hero Section */
 .hero {
     height: 100vh;
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('./assets/hero_v2.png');
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('./assets/hero_v3.png');
     background-size: cover;
     background-position: center;
     display: flex;
@@ -374,31 +383,158 @@ section {
         bottom: 5rem;
     }
 }
+
 /* Enhanced Chatbot Styles */
-.message { display: flex; flex-direction: column; gap: 0.3rem; position: relative; }
-.message-text { word-wrap: break-word; }
-.message-time { font-size: 0.7rem; opacity: 0.6; align-self: flex-end; }
+.message {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    position: relative;
+}
 
-.suggestions { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem 0; align-self: flex-start; max-width: 100%; }
-.suggestion-chip { background: rgba(255, 76, 41, 0.2); border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
-.suggestion-chip:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+.message-text {
+    word-wrap: break-word;
+}
 
-.cta-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 0.5rem 0; align-self: flex-start; max-width: 100%; }
-.cta-btn { background: linear-gradient(135deg, var(--primary), var(--accent)); border: none; color: white; padding: 0.7rem 1.2rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem; }
-.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 76, 41, 0.4); }
+.message-time {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    align-self: flex-end;
+}
 
-.typing-indicator { padding: 1rem; }
-.typing-dots { display: flex; gap: 0.3rem; align-items: center; }
-.typing-dots span { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: typing 1.4s infinite; }
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.7; } 30% { transform: translateY(-10px); opacity: 1; } }
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    align-self: flex-start;
+    max-width: 100%;
+}
 
-.image-gallery { display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 0.5rem 0; align-self: flex-start; }
-.food-image { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.3s; border: 2px solid var(--primary); }
-.food-image:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(255, 76, 41, 0.5); }
+.suggestion-chip {
+    background: rgba(255, 76, 41, 0.2);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+}
 
-.clear-chat-btn { background: transparent; border: none; color: rgba(255, 255, 255, 0.6); cursor: pointer; font-size: 1rem; padding: 0.5rem; transition: color 0.3s; }
-.clear-chat-btn:hover { color: var(--primary); }
+.suggestion-chip:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+}
 
-.chat-body { scroll-behavior: smooth; }
+.cta-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+    align-self: flex-start;
+    max-width: 100%;
+}
+
+.cta-btn {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border: none;
+    color: white;
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 76, 41, 0.4);
+}
+
+.typing-indicator {
+    padding: 1rem;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.7;
+    }
+
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+.image-gallery {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+    align-self: flex-start;
+}
+
+.food-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s;
+    border: 2px solid var(--primary);
+}
+
+.food-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 76, 41, 0.5);
+}
+
+.clear-chat-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.5rem;
+    transition: color 0.3s;
+}
+
+.clear-chat-btn:hover {
+    color: var(--primary);
+}
+
+.chat-body {
+    scroll-behavior: smooth;
+}
