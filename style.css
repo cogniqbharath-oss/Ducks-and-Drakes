@@ -1,16 +1,17 @@
 :root {
-    --primary: #FF4C29;
-    /* Energetic Orange */
-    --accent: #00D2FC;
-    /* Neon Blue */
-    --dark-bg: #1a1a1a;
+    --primary: #5BE058;
+    /* Pool Table Green */
+    --accent: #5BE058;
+    /* Match Primary for cohesion */
+    --dark-bg: #000000;
     --card-bg: rgba(255, 255, 255, 0.05);
-    --text-main: #ffffff;
+    --text-main: #EFEFEF;
     --text-muted: #b3b3b3;
     --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-    --font-heading: 'Outfit', sans-serif;
+    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+    --font-heading: 'Forum', serif;
     --font-body: 'Inter', sans-serif;
+    --teal-glow: radial-gradient(circle at center, rgba(10, 34, 57, 0.4) 0%, rgba(0, 0, 0, 0) 70%);
 }
 
 * {
@@ -21,6 +22,8 @@
 
 body {
     background-color: var(--dark-bg);
+    background-image: var(--teal-glow);
+    background-attachment: fixed;
     color: var(--text-main);
     font-family: var(--font-body);
     overflow-x: hidden;
@@ -31,7 +34,7 @@ h2,
 h3 {
     font-family: var(--font-heading);
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 4px;
 }
 
 /* Glassmorphism Utilities */
