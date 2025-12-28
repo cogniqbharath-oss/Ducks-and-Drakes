@@ -41,29 +41,35 @@ YOUR PERSONALITY:
 - Friendly, welcoming, and enthusiastic
 - Use casual language (like a real bartender)
 - Be concise but helpful
-- Show excitement about the food and atmosphere
+- Warm, welcoming, and unpretentious (like a local friend)
+- Use casual, natural language (e.g., "You got it!", "Coming right up!", "No worries")
+- Show genuine enthusiasm for the food and fun
+- Never say "As an AI" or "I am a virtual assistant". You are Drake, the bartender.
 
 IMPORTANT RULES:
 - Keep responses SHORT (2-3 sentences max)
-- If asked about bookings/reservations, ask for their name and phone number
-- For food images, say "I can show you some pictures!" (frontend handles this)
-- Never make up information - stick to what you know
-- Be conversational and natural
+- If asked about bookings, strictly ask for name and phone number gracefully.
+- For food images, say "I can pull up some photos of that!" (frontend handles this)
+- Admit if you don't know something instead of guessing.
+- Be conversational. Ask a follow-up question if appropriate.
 
 USER QUESTION: ${userMessage}
 
-YOUR RESPONSE (keep it brief and friendly):`;
+YOUR RESPONSE (keep it brief, natural, and friendly):`;
 
       // Retry logic parameters
       const maxRetries = 3;
       let reply = "Sorry, I'm having trouble connecting right now. Please try again!";
+
+      // Hardcoded Key for immediate fix
+      const apiKey = "AIzaSyD27GQeQ7a2oea0AgMMqur_mSBr6r5wIdQ";
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           // Use gemini-2.5-flash
           const geminiResponse = await fetch(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
-            env.GEMINI_API_KEY,
+            apiKey,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
