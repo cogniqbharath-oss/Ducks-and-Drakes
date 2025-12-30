@@ -1,108 +1,95 @@
 // Cloudflare Pages Function for /api/chat endpoint
+/**
+ * Project: ducks-and-drakes
+ * API Key Var: env.API_KEY_DUCK
+ * Model: gemma-3-27b-it
+ */
+
 export async function onRequestPost(context) {
     const { request, env } = context;
 
+    const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "86400",
+    };
+
     try {
-        const { message } = await request.json();
+        const body = await request.json();
+        const userMessage = body.message;
 
-        console.log('Received message:', message);
-        console.log('API Key present:', !!env.GEMINI_API_KEY);
+        if (!userMessage) {
+            return new Response(JSON.stringify({ error: "No message provided" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json", ...corsHeaders },
+            });
+        }
 
-        // Enhanced system prompt
-        // Enhanced system prompt
+        // System Prompt for 'Drake' the Bartender
         const systemPrompt = `You are 'Drake', the friendly, veteran bartender at Ducks and Drakes, a beloved sports bar and smokehouse in Leavenworth, WA.
 
 BUSINESS INFO:
 - Location: 221 8th St, Leavenworth, WA 98826
-- Phone: (509) 548-0270
 - Hours: Daily 11:00 AM - 1:00 AM
-- Vibe: Casual sports bar, smokehouse BBQ, pool tables, karaoke, lively atmosphere
-- Specialties: Smokehouse BBQ (Brisket, Pulled Pork), Burgers, Fries, Draft Beer, Cocktails
+- Vibe: Casual sports bar, smokehouse BBQ, pool tables, karaoke, lively atmosphere.
+- Specialties: Smokehouse BBQ (Brisket, Pulled Pork), Burgers, Draft Beer, Cocktails.
 
 YOUR PERSONALITY:
-- Warm, welcoming, and unpretentious (like a local friend)
-- Use casual, natural language (e.g., "You got it!", "Coming right up!", "No worries")
-- Show genuine enthusiasm for the food and fun
-- Never say "As an AI" or "I am a virtual assistant". You are Drake, the bartender.
+- Warm, welcoming, and unpretentious.
+- Use casual, natural language (e.g., "You got it!", "Coming right up!", "No worries").
+- Never say "As an AI". You ARE Drake.
 
 IMPORTANT RULES:
-- Keep responses SHORT (2-3 sentences max)
-- If asked about bookings, strictly ask for name and phone number gracefully.
-- For food images, say "I can pull up some photos of that!" (frontend handles this)
-- Admit if you don't know something instead of guessing.
-- Be conversational. Ask a follow-up question if appropriate.
+- Keep responses SHORT (2 sentences max).
+- If asked about bookings, ask for their name and phone number.
+- For food images, say "I can pull up some photos of that!".
 
-USER QUESTION: ${message}
+USER MESSAGE: ${userMessage}
 
-YOUR RESPONSE (keep it brief, natural, and friendly):`;
+DRAKE'S RESPONSE:`;
 
-        // Call Gemini API with the working model - Hardcoded for reliable production fix
-        // TODO: Move this back to env vars after confirming functionality
-        const apiKey = "AIzaSyD27GQeQ7a2oea0AgMMqur_mSBr6r5wIdQ";
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        // API Configuration
+        const model = "gemma-3-27b-it";
+        const apiKey = env.API_KEY_DUCK;
 
-        console.log('Calling Gemini API (Model: gemini-2.5-flash)...');
-
-        let response;
-        let data;
-        let success = false;
-
-        // Retry logic with exponential backoff
-        for (let attempt = 0; attempt < 3; attempt++) {
-            try {
-                response = await fetch(geminiUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: systemPrompt }] }],
-                        generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 200
-                        }
-                    })
-                });
-
-                if (response.status === 429) {
-                    console.log(`Attempt ${attempt + 1}: Rate limited. Waiting...`);
-                    const waitTime = Math.pow(2, attempt) * 1000;
-                    await new Promise(r => setTimeout(r, waitTime));
-                    continue;
-                }
-
-                if (response.status === 200) {
-                    success = true;
-                    break;
-                }
-            } catch (e) {
-                console.error(`Attempt ${attempt + 1} error:`, e);
-            }
+        if (!apiKey) {
+            console.error("API_KEY_DUCK not configured in environment variables.");
+            return new Response(JSON.stringify({ error: "API Key Configuration Error" }), {
+                status: 500,
+                headers: { "Content-Type": "application/json", ...corsHeaders },
+            });
         }
 
-        console.log('API Response status:', response ? response.status : 'No response');
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-        if (success) {
-            data = await response.json();
-            console.log('API Response data:', JSON.stringify(data).substring(0, 200));
-        }
+        // Call Google AI API
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: systemPrompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 200,
+                },
+            }),
+        });
 
-        let reply = "I'm here to help! Ask me about our hours, menu, or events!";
+        const data = await response.json();
 
-        if (success && data.candidates && data.candidates[0]?.content) {
+        let reply = "Hey! I'm having a quick technical glitch with my talk-box. Ask me about our menu or hours!";
+
+        if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
             reply = data.candidates[0].content.parts[0].text;
-            console.log('Got reply:', reply.substring(0, 50));
-        } else {
-            console.error('No candidates in response or bad status');
         }
 
         return new Response(JSON.stringify({ reply }), {
-            headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-            },
+            headers: { "Content-Type": "application/json", ...corsHeaders },
         });
 
     } catch (error) {
-        console.error('Error in chat function:', error.message, error.stack);
+        console.error('Error in chat function:', error);
         return new Response(JSON.stringify({
             reply: "Hey there! I'm having a quick technical hiccup. Try asking about our hours, menu, or events!"
         }), {
@@ -122,6 +109,7 @@ export async function onRequestOptions() {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "86400",
         },
     });
 }
