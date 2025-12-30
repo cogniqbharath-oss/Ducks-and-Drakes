@@ -2,7 +2,7 @@
  * Worker URL: https://noisy-king-dd9b.cogniq-bharath.workers.dev/
  * Project: ducks-and-drakes
  * API Key Var: env.API_KEY_DUCK
- * Model: gemma-3-27b-it
+ * Model: gemma-3-27b-it (with fallback)
  */
 
 export default {
@@ -14,15 +14,13 @@ export default {
             "Access-Control-Max-Age": "86400",
         };
 
-        // 1. Handle CORS Preflight
         if (request.method === "OPTIONS") {
             return new Response(null, { headers: corsHeaders });
         }
 
-        // 2. Only allow POST requests for Chat
         if (request.method !== "POST") {
-            return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
-                status: 405,
+            return new Response(JSON.stringify({ error: "Method not allowed" }), {
+                status: 200, // Returning 200 as requested for better frontend handling
                 headers: { "Content-Type": "application/json", ...corsHeaders },
             });
         }
@@ -32,77 +30,67 @@ export default {
             const userMessage = body.message;
 
             if (!userMessage) {
-                return new Response(JSON.stringify({ error: "No message provided" }), {
-                    status: 400,
+                return new Response(JSON.stringify({ reply: "I didn't hear anything! What's up?" }), {
+                    status: 200,
                     headers: { "Content-Type": "application/json", ...corsHeaders },
                 });
             }
 
-            // 3. System Prompt for 'Drake' the Bartender
-            const systemPrompt = `You are 'Drake', the friendly, veteran bartender at Ducks and Drakes, a beloved sports bar and smokehouse in Leavenworth, WA.
+            // 1. Configuration with Fallbacks
+            const apiKey = env.API_KEY_DUCK || "AIzaSyD27GQeQ7a2oea0AgMMqur_mSBr6r5wIdQ";
+            const models = ["gemma-3-27b-it", "gemma-2-27b-it", "gemini-1.5-flash"];
 
-BUSINESS INFO:
-- Location: 221 8th St, Leavenworth, WA 98826
-- Hours: Daily 11:00 AM - 1:00 AM
-- Vibe: Casual sports bar, smokehouse BBQ, pool tables, karaoke, lively atmosphere.
-- Specialties: Smokehouse BBQ (Brisket, Pulled Pork), Burgers, Draft Beer, Cocktails.
+            const systemPrompt = `You are 'Drake', the friendly bartender at Ducks and Drakes in Leavenworth, WA.
+Business: 221 8th St. Hours: 11AM-1AM.
+Vibe: Sports bar, BBQ.
+Tone: Casual, warm.
+Rules: 2 sentences max. If asked for booking, ask for name/phone.
+USER: ${userMessage}
+DRAKE:`;
 
-YOUR PERSONALITY:
-- Warm, welcoming, and unpretentious.
-- Use casual, natural language (e.g., "You got it!", "Coming right up!", "No worries").
-- Never say "As an AI". You ARE Drake.
+            let reply = "";
+            let success = false;
 
-IMPORTANT RULES:
-- Keep responses SHORT (2 sentences max).
-- If asked about bookings, ask for their name and phone number.
-- For food images, say "I can pull up some photos of that!".
+            // Try models sequentially
+            for (const model of models) {
+                try {
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: systemPrompt }] }],
+                            generationConfig: { temperature: 0.7, maxOutputTokens: 200 }
+                        }),
+                    });
 
-USER MESSAGE: ${userMessage}
-
-DRAKE'S RESPONSE:`;
-
-            // 4. API Configuration
-            const model = "gemma-3-27b-it";
-            const apiKey = env.API_KEY_DUCK;
-
-            if (!apiKey) {
-                return new Response(JSON.stringify({ error: "API_KEY_DUCK not configured in environment variables." }), {
-                    status: 500,
-                    headers: { "Content-Type": "application/json", ...corsHeaders },
-                });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                            reply = data.candidates[0].content.parts[0].text;
+                            success = true;
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Error with ${model}:`, e);
+                }
             }
 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-            // 5. Call Google AI API
-            const response = await fetch(apiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: systemPrompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 200,
-                    },
-                }),
-            });
-
-            const data = await response.json();
-
-            let reply = "Hey! I'm having a quick technical glitch with my talk-box. Ask me about our menu or hours!";
-
-            if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-                reply = data.candidates[0].content.parts[0].text;
+            if (!success) {
+                reply = "The bar's a bit busy right now, but I'm here! Ask me about our menu or location.";
             }
 
-            // 6. Return response to frontend
             return new Response(JSON.stringify({ reply }), {
+                status: 200,
                 headers: { "Content-Type": "application/json", ...corsHeaders },
             });
 
         } catch (error) {
-            return new Response(JSON.stringify({ error: "Internal Server Error", details: error.message }), {
-                status: 500,
+            return new Response(JSON.stringify({
+                reply: "Hey! Something tripped me up. Try asking about our BBQ or hours!"
+            }), {
+                status: 200,
                 headers: { "Content-Type": "application/json", ...corsHeaders },
             });
         }
